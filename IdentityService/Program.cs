@@ -1,7 +1,11 @@
 using IdentityService.Context;
+using IdentityService.Mapper;
 using IdentityService.Models.Entities;
+using IdentityService.Service.Abstracts;
+using IdentityService.Service.Concretes;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using System.Reflection;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -17,15 +21,17 @@ builder.Services.AddIdentity<AppUser, AppRole>(x =>
     x.Lockout.MaxFailedAccessAttempts = 5;
     x.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(3);
 
-}).AddEntityFrameworkStores<Context>().AddDefaultTokenProviders();
+}).AddEntityFrameworkStores<MyContext>().AddDefaultTokenProviders();
 
 
-builder.Services.AddDbContextPool<Context>(x => x.UseSqlServer(builder.Configuration.GetConnectionString("MyConnection")).UseLazyLoadingProxies());
+
+builder.Services.AddDbContextPool<MyContext>(x => x.UseSqlServer(builder.Configuration.GetConnectionString("MyConnection")).UseLazyLoadingProxies());
+
+builder.Services.AddAutoMapper(x => x.AddProfile(typeof(IdentityMapper)));
+builder.Services.AddScoped<IAppUserService, AppUserService>();
+
 
 builder.Services.AddControllers();
-
-
-
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
@@ -42,7 +48,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-//app.UseAuthentication();
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
